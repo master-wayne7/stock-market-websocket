@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  app:
+    tty: true
+    restart: always
+    image: stock-tracker
+    container_name: stock-tracker
+    build: .
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    networks:
+      - application
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/src/app
+    command: air -c .air.toml
+
+  db:
+    image: postgres:16.2-alpine
+    container_name: stock-tracker-db
+    environment:
+      - POSTGRES_HOST=${DB_HOST}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+    networks:
+      - application
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  postgres-db:
+
+networks:
+  application:
