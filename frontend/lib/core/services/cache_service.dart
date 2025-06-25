@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:logger/logger.dart';
 
@@ -29,6 +28,7 @@ class CacheService {
   static Future<String> getCacheInfo() async {
     try {
       final cacheManager = DefaultCacheManager();
+      // ignore: unused_local_variable
       final store = cacheManager.store;
 
       // This is a simplified version - actual cache info would need more detailed implementation

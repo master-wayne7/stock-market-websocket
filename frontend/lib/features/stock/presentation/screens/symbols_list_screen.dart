@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/symbol_image.dart';
 import '../widgets/connectivity_indicator.dart';
+import '../widgets/enhanced_stock_tile.dart';
 import '../../providers/stock_providers.dart';
-import '../../providers/daily_ohlc_provider.dart';
 import 'stock_detail_screen.dart';
 
 class SymbolsListScreen extends ConsumerWidget {
@@ -70,18 +70,25 @@ class SymbolsListScreen extends ConsumerWidget {
           ),
         ),
 
-        // Symbols list
+        // Symbols list with pull-to-refresh
         Expanded(
-          child: allHistoryAsync.when(
-            data: (historyData) => ListView.builder(
-              itemCount: symbols.length,
-              itemBuilder: (context, index) {
-                final symbol = symbols[index];
-                return _buildSymbolListItem(context, ref, symbol);
-              },
+          child: RefreshIndicator(
+            onRefresh: () => _handleRefresh(ref),
+            child: allHistoryAsync.when(
+              data: (historyData) => ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: symbols.length,
+                itemBuilder: (context, index) {
+                  final symbol = symbols[index];
+                  return EnhancedStockTile(
+                    symbol: symbol,
+                    onTap: () => _navigateToDetail(context, symbol),
+                  );
+                },
+              ),
+              loading: () => _buildLoadingList(symbols),
+              error: (error, stackTrace) => _buildErrorList(context, ref),
             ),
-            loading: () => _buildLoadingList(symbols),
-            error: (error, stackTrace) => _buildErrorList(context, ref),
           ),
         ),
       ],
@@ -90,23 +97,48 @@ class SymbolsListScreen extends ConsumerWidget {
 
   Widget _buildLoadingList(List<String> symbols) {
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: symbols.length,
       itemBuilder: (context, index) {
         final symbol = symbols[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: SymbolImage(symbol: symbol, size: 48),
-            title: Text(
-              symbol,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            subtitle: const Text('Loading historical data...'),
-            trailing: const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                SymbolImage(symbol: symbol, size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        symbol,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Loading historical data...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
             ),
           ),
         );
@@ -115,168 +147,119 @@ class SymbolsListScreen extends ConsumerWidget {
   }
 
   Widget _buildErrorList(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load historical data',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.red.shade700,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => ref.invalidate(allStocksHistoryProvider),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSymbolListItem(BuildContext context, WidgetRef ref, String symbol) {
-    // Watch the daily OHLC for preview data (uses historical data only)
-    final dailyOHLC = ref.watch(dailyOHLCProvider(symbol));
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: SymbolImage(symbol: symbol, size: 48),
-        title: Text(
-          symbol,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        subtitle: dailyOHLC != null
-            ? _buildQuickPreview(dailyOHLC)
-            : Text(
-                'Loading...',
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (dailyOHLC != null) ...[
-              Column(
+    return RefreshIndicator(
+      onRefresh: () => _handleRefresh(ref),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
                   Text(
-                    '\$${dailyOHLC.close.toStringAsFixed(2)}',
+                    'Failed to load historical data',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pull down to refresh',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _getPriceColor(dailyOHLC),
+                      color: Colors.grey,
+                      fontSize: 14,
                     ),
                   ),
-                  Text(
-                    '${dailyOHLC.isPositive ? '+' : ''}${dailyOHLC.percentageChange.toStringAsFixed(2)}%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _getPriceColor(dailyOHLC),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => _handleRefresh(ref),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
                   ),
                 ],
               ),
-              const SizedBox(width: 8),
-            ],
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey.shade400,
             ),
-          ],
-        ),
-        onTap: () => _navigateToDetail(context, symbol),
-      ),
-    );
-  }
-
-  Widget _buildQuickPreview(DailyOHLC dailyOHLC) {
-    final changeColor = _getPriceColor(dailyOHLC);
-
-    return Row(
-      children: [
-        Icon(
-          dailyOHLC.isPositive ? Icons.trending_up : Icons.trending_down,
-          size: 16,
-          color: changeColor,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${dailyOHLC.isPositive ? '+' : ''}\$${dailyOHLC.priceChange.abs().toStringAsFixed(2)}',
-          style: TextStyle(
-            color: changeColor,
-            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          'H: \$${dailyOHLC.high.toStringAsFixed(2)}',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'L: \$${dailyOHLC.low.toStringAsFixed(2)}',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load symbols',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.red.shade700,
-                    fontWeight: FontWeight.bold,
+    return RefreshIndicator(
+      onRefresh: () => _handleRefresh(ref),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade300,
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load symbols',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pull down to refresh',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => _handleRefresh(ref),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => ref.invalidate(availableSymbolsProvider),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Color _getPriceColor(DailyOHLC dailyOHLC) {
-    return dailyOHLC.isPositive ? Colors.green : Colors.red;
+  Future<void> _handleRefresh(WidgetRef ref) async {
+    // Invalidate both providers to trigger a refresh
+    ref.invalidate(availableSymbolsProvider);
+    ref.invalidate(allStocksHistoryProvider);
+
+    // Wait for the providers to reload
+    await Future.wait([
+      ref.read(availableSymbolsProvider.future),
+      ref.read(allStocksHistoryProvider.future),
+    ]);
   }
 
   void _navigateToDetail(BuildContext context, String symbol) {

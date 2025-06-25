@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/stock_info_card.dart';
-import '../widgets/syncfusion_candle_chart.dart';
 import '../widgets/connectivity_indicator.dart';
 import '../widgets/realtime_price_display.dart';
+import '../widgets/debug_dashboard.dart';
+import '../widgets/enhanced_chart_component.dart';
+import '../widgets/data_debug_widget.dart';
 import '../../providers/stock_providers.dart';
 
 class StockDetailScreen extends ConsumerStatefulWidget {
@@ -48,6 +49,16 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DebugDashboard(),
+              ),
+            ),
+            tooltip: 'Debug Dashboard',
+          ),
+          IconButton(
             icon: const Icon(Icons.bug_report),
             onPressed: () => _showDebugDialog(context),
             tooltip: 'Debug Info',
@@ -59,38 +70,47 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
       body: Column(
         children: [
           // Real-time price display
-          Container(
-            width: double.infinity,
-            color: Colors.grey.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: RealtimePriceDisplay(symbol: widget.symbol),
-            ),
-          ),
 
-          // Stock info cards
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: StockInfoCard(symbol: widget.symbol),
-          ),
+          // // Stock info cards
+          // Padding(
+          //   padding: const EdgeInsets.all(16),
+          //   child: StockInfoCard(symbol: widget.symbol),
+          // ),
 
-          // Chart section
+          // Enhanced Chart section with time intervals and chart type toggle
           Expanded(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: Colors.grey.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: RealtimePriceDisplay(symbol: widget.symbol),
+                    ),
                   ),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          spreadRadius: 1,
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: EnhancedChartComponent(symbol: widget.symbol),
+                  ),
+
+                  // Debug widget (temporary) - remove after debugging
+                  DataDebugWidget(symbol: widget.symbol),
                 ],
               ),
-              child: SyncfusionCandleChart(symbol: widget.symbol),
             ),
           ),
         ],

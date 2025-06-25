@@ -75,7 +75,6 @@ class ConnectivityIndicator extends ConsumerWidget {
           color: _getStateColor(state),
         );
       case WebSocketConnectionState.disconnected:
-      default:
         return Icon(
           Icons.wifi_off,
           size: 16,
@@ -95,7 +94,6 @@ class ConnectivityIndicator extends ConsumerWidget {
       case WebSocketConnectionState.failed:
         return Colors.red;
       case WebSocketConnectionState.disconnected:
-      default:
         return Colors.grey;
     }
   }
@@ -111,7 +109,6 @@ class ConnectivityIndicator extends ConsumerWidget {
       case WebSocketConnectionState.failed:
         return 'Failed';
       case WebSocketConnectionState.disconnected:
-      default:
         return isConnected ? 'Offline' : 'No Internet';
     }
   }

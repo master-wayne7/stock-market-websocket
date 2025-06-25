@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:intl/intl.dart';
 import '../../providers/five_minute_candles_provider.dart';
+import '../../providers/filtered_candle_provider.dart';
+import '../../providers/stock_providers.dart';
 
 class SyncfusionCandleChart extends ConsumerStatefulWidget {
   final String symbol;
@@ -44,7 +45,37 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
 
   @override
   Widget build(BuildContext context) {
-    final candlesData = ref.watch(fiveMinuteCandlesProvider(widget.symbol));
+    final candlesData = ref.watch(filteredCandleDataProvider(widget.symbol));
+    final combinedData = ref.watch(combinedCandleDataProvider(widget.symbol));
+    final historicalData = ref.watch(symbolHistoricalDataProvider(widget.symbol));
+    final webSocketState = ref.watch(symbolWebSocketProvider(widget.symbol));
+
+    // Debug logging
+    print('📊 Chart Debug for ${widget.symbol}:');
+    print('  - 5min candles: ${candlesData.length}');
+    print('  - Combined data: ${combinedData.length}');
+    print('  - Historical data: ${historicalData.length}');
+    print('  - Live candles: ${webSocketState.liveCandles.length}');
+    print('  - WebSocket connected: ${webSocketState.isConnected}');
+
+    if (historicalData.isNotEmpty) {
+      print('  - First historical: ${historicalData.first.timestamp} - \$${historicalData.first.close}');
+      print('  - Last historical: ${historicalData.last.timestamp} - \$${historicalData.last.close}');
+    }
+
+    if (combinedData.isNotEmpty) {
+      print('  - First combined: ${combinedData.first.timestamp} - \$${combinedData.first.close}');
+      print('  - Last combined: ${combinedData.last.timestamp} - \$${combinedData.last.close}');
+    }
+
+    // Show different states based on data availability
+    if (combinedData.isEmpty && historicalData.isEmpty) {
+      return _buildNoDataState();
+    }
+
+    if (candlesData.isEmpty && combinedData.isNotEmpty) {
+      return _buildAggregatingState(combinedData.length);
+    }
 
     if (candlesData.isEmpty) {
       return _buildLoadingState();
@@ -55,31 +86,19 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Chart header
-          _buildChartHeader(candlesData),
-
-          const SizedBox(height: 12),
-
-          // Main chart
           Expanded(
             child: SfCartesianChart(
               plotAreaBorderWidth: 0,
               backgroundColor: Colors.white,
-              primaryXAxis: DateTimeAxis(
-                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
-                axisLine: const AxisLine(width: 1, color: Colors.grey),
-                labelStyle: const TextStyle(fontSize: 10, color: Colors.grey),
-                dateFormat: DateFormat('HH:mm'),
-                intervalType: DateTimeIntervalType.minutes,
-                interval: 15,
-                edgeLabelPlacement: EdgeLabelPlacement.shift,
+              primaryXAxis: const DateTimeAxis(
+                isVisible: false,
+                majorGridLines: MajorGridLines(width: 0),
+                axisLine: AxisLine(width: 0),
               ),
-              primaryYAxis: NumericAxis(
-                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
-                axisLine: const AxisLine(width: 1, color: Colors.grey),
-                labelStyle: const TextStyle(fontSize: 10, color: Colors.grey),
-                numberFormat: NumberFormat.currency(symbol: '\$', decimalDigits: 2),
-                opposedPosition: true,
+              primaryYAxis: const NumericAxis(
+                isVisible: false,
+                majorGridLines: MajorGridLines(width: 0),
+                axisLine: AxisLine(width: 0),
               ),
               trackballBehavior: _trackballBehavior,
               zoomPanBehavior: _zoomPanBehavior,
@@ -108,15 +127,16 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
               ),
             ),
           ),
-
-          // Chart controls
-          _buildChartControls(),
         ],
       ),
     );
   }
 
   Widget _buildLoadingState() {
+    final combinedData = ref.watch(combinedCandleDataProvider(widget.symbol));
+    final historicalData = ref.watch(symbolHistoricalDataProvider(widget.symbol));
+    final webSocketState = ref.watch(symbolWebSocketProvider(widget.symbol));
+
     return Container(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -130,8 +150,78 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Building 5-minute candles from live data',
+            'Building 1-minute candles from live data',
             style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          // Debug information
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text('Historical: ${historicalData.length} candles', style: TextStyle(fontSize: 11)),
+                Text('Live: ${webSocketState.liveCandles.length} candles', style: TextStyle(fontSize: 11)),
+                Text('Combined: ${combinedData.length} candles', style: TextStyle(fontSize: 11)),
+                Text('WebSocket: ${webSocketState.isConnected ? "Connected" : "Disconnected"}', style: TextStyle(fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoDataState() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.warning_amber_outlined,
+            size: 64,
+            color: Colors.orange.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No data available for ${widget.symbol}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Check if the backend server is running and has data for this symbol',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAggregatingState(int rawCandleCount) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Processing ${widget.symbol} data...',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Aggregating $rawCandleCount candles into 1-minute intervals',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -154,7 +244,7 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${widget.symbol} - 5Min Chart',
+              '${widget.symbol} - 1Min Chart',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             if (latest != null) ...[
@@ -199,7 +289,7 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
             ),
             const SizedBox(height: 4),
             Text(
-              '5-min intervals',
+              '1-min intervals',
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
@@ -220,7 +310,7 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
         _buildControlButton(
           icon: Icons.refresh,
           label: 'Refresh',
-          onPressed: () => ref.read(fiveMinuteCandlesProvider(widget.symbol).notifier).clearCandles(),
+          onPressed: () => ref.read(oneMinuteCandlesProvider(widget.symbol).notifier).clearCandles(),
         ),
         _buildControlButton(
           icon: Icons.info_outline,
@@ -255,10 +345,10 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('Timeframe', '5 Minutes'),
+            _buildInfoRow('Timeframe', '1 Minute'),
             _buildInfoRow('Data Source', 'Real-time WebSocket'),
             _buildInfoRow('Update Frequency', 'Live'),
-            _buildInfoRow('Max Candles', '100 (8+ hours)'),
+            _buildInfoRow('Max Candles', '200 (3+ hours)'),
             const SizedBox(height: 12),
             const Text('Chart Features:', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
