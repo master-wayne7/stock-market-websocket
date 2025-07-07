@@ -10,13 +10,13 @@ class AppConfig {
   // Base URLs for different environments
   static const Map<Environment, String> _baseUrls = {
     Environment.development: 'http://10.0.2.2:8080', // Android emulator
-    Environment.production: 'https://your-app-name.onrender.com', // Replace with your actual Render URL
+    Environment.production: 'https://stock-market-backend-r7uw.onrender.com', // Your actual Render URL
   };
 
   // WebSocket URLs for different environments
   static const Map<Environment, String> _wsUrls = {
     Environment.development: 'ws://10.0.2.2:8080/ws', // Android emulator
-    Environment.production: 'wss://your-app-name.onrender.com/ws', // Replace with your actual Render URL
+    Environment.production: 'wss://stock-market-backend-r7uw.onrender.com/ws', // Your actual Render URL
   };
 
   // Alternative localhost URLs for development

@@ -8,7 +8,7 @@ import (
 )
 
 type Env struct {
-	SERVER_PORT string `env:"PORT,SERVER_PORT" envDefault:"8080"`
+	SERVER_PORT string `env:"PORT" envDefault:"8080"`
 	API_KEY     string `env:"API_KEY" envDefault:""`
 
 	// Database
@@ -23,13 +23,27 @@ func EnvConfig() *Env {
 	// Try to load .env file (for local development)
 	// Don't fail if it doesn't exist (for production deployments)
 	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: .env file not found: %v", err)
+		log.Printf("Warning: .env file not found (this is normal in production): %v", err)
 	}
 
 	config := &Env{}
 	if err := env.Parse(config); err != nil {
 		log.Fatalf("Failed to process environment variables: %v", err)
 	}
+
+	// Log configuration (without sensitive data)
+	log.Printf("Configuration loaded:")
+	log.Printf("  SERVER_PORT: %s", config.SERVER_PORT)
+	log.Printf("  DB_HOST: %s", config.DB_HOST)
+	log.Printf("  DB_USER: %s", config.DB_USER)
+	log.Printf("  DB_NAME: %s", config.DB_NAME)
+	log.Printf("  DB_SSL_MODE: %s", config.DB_SSL_MODE)
+	log.Printf("  API_KEY: %s", func() string {
+		if config.API_KEY == "" {
+			return "NOT SET"
+		}
+		return "SET (hidden)"
+	}())
 
 	// Validate required environment variables
 	if config.API_KEY == "" {
