@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: stock-market-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile.prod
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: API_KEY
+        sync: false
+      - key: DB_HOST
+        fromDatabase:
+          name: stock-market-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: stock-market-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: stock-market-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: stock-market-db
+          property: database
+      - key: DB_SSL_MODE
+        value: require
+    healthCheckPath: /health
+
+databases:
+  - name: stock-market-db
+    plan: free
+    databaseName: stock_tracker
+    user: stock_user

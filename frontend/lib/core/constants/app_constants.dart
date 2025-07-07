@@ -1,15 +1,13 @@
-class AppConstants {
-  // API Configuration - Updated for proper local development
-  static const String baseUrl = 'http://10.0.2.2:8080'; // For Android emulator
-  static const String wsUrl = 'ws://10.0.2.2:8080/ws'; // For Android emulator
+import 'app_config.dart';
 
-  // Alternative URLs for different environments
+class AppConstants {
+  // API Configuration - Now using AppConfig for environment management
+  static String get baseUrl => AppConfig.baseUrl;
+  static String get wsUrl => AppConfig.wsUrl;
+
+  // Alternative URLs for different environments (deprecated - use AppConfig)
   static const String localhostBaseUrl = 'http://localhost:8080';
   static const String localhostWsUrl = 'ws://localhost:8080/ws';
-
-  // For physical devices on same network, use your machine's IP
-  // Example: static const String deviceBaseUrl = 'http://192.168.1.100:8080';
-  // Example: static const String deviceWsUrl = 'ws://192.168.1.100:8080/ws';
 
   static const String symbolsUrl = '/symbols';
   static const String stocksHistoryUrl = '/stocks-history';
@@ -40,6 +38,6 @@ class AppConstants {
 
   // Environment helper methods
   static String getEnvironmentInfo() {
-    return 'Using baseUrl: $baseUrl, wsUrl: $wsUrl';
+    return AppConfig.getEnvironmentInfo();
   }
 }

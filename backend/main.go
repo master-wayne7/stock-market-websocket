@@ -42,18 +42,20 @@ func main() {
 	go broadcastUpdates()
 
 	// ---Endpoints---
+	// Health check endpoint
+	http.HandleFunc("/health", handleHealth)
 	// Connect to Websocket
-	http.HandleFunc("/ws", handleWebSocket)
+	http.HandleFunc("/ws", corsMiddleware(handleWebSocket))
 	// Get available symbols
-	http.HandleFunc("/symbols", handleGetSymbols)
+	http.HandleFunc("/symbols", corsMiddleware(handleGetSymbols))
 	// Fetch all previous candles of all symbols
-	http.HandleFunc("/stocks-history", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/stocks-history", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		handleStocksHistory(w, r, db)
-	})
+	}))
 	// fetch all previous candles of a symbol
-	http.HandleFunc("/stocks-candles", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/stocks-candles", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		handleStocksCandles(w, r, db)
-	})
+	}))
 
 	// Serve the Endpoints
 	log.Printf("Server is running on port %s", env.SERVER_PORT)
@@ -86,6 +88,34 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Failed to read message from WebSocket: %v", err)
 			break
 		}
+	}
+}
+
+func handleHealth(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response := map[string]string{
+		"status": "healthy",
+		"time":   time.Now().Format(time.RFC3339),
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Call the next handler
+		next(w, r)
 	}
 }
 
