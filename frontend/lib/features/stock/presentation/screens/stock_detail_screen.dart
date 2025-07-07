@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/connectivity_indicator.dart';
 import '../widgets/realtime_price_display.dart';
@@ -6,6 +7,7 @@ import '../widgets/debug_dashboard.dart';
 import '../widgets/enhanced_chart_component.dart';
 import '../widgets/data_debug_widget.dart';
 import '../../providers/stock_providers.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class StockDetailScreen extends ConsumerStatefulWidget {
   final String symbol;
@@ -47,25 +49,25 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
       appBar: AppBar(
         title: Text(widget.symbol),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const DebugDashboard(),
-              ),
-            ),
-            tooltip: 'Debug Dashboard',
-          ),
-          IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () => _showDebugDialog(context),
-            tooltip: 'Debug Info',
-          ),
-          const ConnectivityIndicator(),
-          const SizedBox(width: 16),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.analytics),
+        //     onPressed: () => Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (context) => const DebugDashboard(),
+        //       ),
+        //     ),
+        //     tooltip: 'Debug Dashboard',
+        //   ),
+        //   // IconButton(
+        //   //   icon: const Icon(Icons.bug_report),
+        //   //   onPressed: () => _showDebugDialog(context),
+        //   //   tooltip: 'Debug Info',
+        //   // ),
+        //   // const ConnectivityIndicator(),
+        //   const SizedBox(width: 16),
+        // ],
       ),
       body: Column(
         children: [
@@ -79,37 +81,45 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
 
           // Enhanced Chart section with time intervals and chart type toggle
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    color: Colors.grey.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: RealtimePriceDisplay(symbol: widget.symbol),
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                },
+              ),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: RealtimePriceDisplay(symbol: widget.symbol),
+                      ),
                     ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.1),
-                          spreadRadius: 1,
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade900 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.black.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.1),
+                            spreadRadius: 1,
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: EnhancedChartComponent(symbol: widget.symbol),
                     ),
-                    child: EnhancedChartComponent(symbol: widget.symbol),
-                  ),
 
-                  // Debug widget (temporary) - remove after debugging
-                  DataDebugWidget(symbol: widget.symbol),
-                ],
+                    // Debug widget (temporary) - remove after debugging
+                    // DataDebugWidget(symbol: widget.symbol),
+                  ],
+                ),
               ),
             ),
           ),
@@ -126,15 +136,16 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500,
-              color: Colors.grey,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
             ),
           ),
         ],
@@ -148,9 +159,10 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
       children: [
         Text(
           'Debug Information for ${widget.symbol}',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -206,7 +218,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade900,
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade900 : Colors.grey.shade800,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const SingleChildScrollView(
@@ -249,9 +261,10 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen> {
                 children: [
                   Text(
                     'Debug Dashboard - ${widget.symbol}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                   IconButton(

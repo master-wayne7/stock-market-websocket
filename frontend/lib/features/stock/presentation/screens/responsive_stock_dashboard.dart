@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_config.dart';
@@ -8,8 +9,10 @@ import '../../../../core/services/websocket_service.dart';
 import '../widgets/connectivity_indicator.dart';
 import '../widgets/symbol_selector.dart';
 import '../widgets/stock_info_card.dart';
-import '../widgets/stock_chart_widget.dart';
+import '../widgets/enhanced_chart_component.dart';
+import '../widgets/enhanced_stock_tile.dart';
 import '../../providers/stock_providers.dart';
+import 'stock_detail_screen.dart';
 
 class ResponsiveStockDashboard extends ConsumerStatefulWidget {
   const ResponsiveStockDashboard({super.key});
@@ -20,6 +23,7 @@ class ResponsiveStockDashboard extends ConsumerStatefulWidget {
 
 class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashboard> {
   String selectedSymbol = 'AAPL';
+  bool showListView = false; // Toggle between chart view and list view
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +32,16 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
 
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: ResponsiveContainer(
-        centerContent: false,
-        child: ResponsiveLayout(
-          mobile: _buildMobileLayout(context, connectionState, symbolsAsync),
-          tablet: _buildTabletLayout(context, connectionState, symbolsAsync),
-          desktop: _buildDesktopLayout(context, connectionState, symbolsAsync),
-        ),
-      ),
+      body: showListView
+          ? _buildStockListView(context, symbolsAsync)
+          : ResponsiveContainer(
+              centerContent: false,
+              child: ResponsiveLayout(
+                mobile: _buildMobileLayout(context, connectionState, symbolsAsync),
+                tablet: _buildTabletLayout(context, connectionState, symbolsAsync),
+                desktop: _buildDesktopLayout(context, connectionState, symbolsAsync),
+              ),
+            ),
     );
   }
 
@@ -45,7 +51,7 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
         children: [
           const Icon(Icons.trending_up, size: 24),
           const SizedBox(width: 8),
-          Text(AppConstants.appName),
+          const Text(AppConstants.appName),
           if (AppConfig.enableDebugFeatures) ...[
             const SizedBox(width: 8),
             Container(
@@ -67,8 +73,17 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
         ],
       ),
       actions: [
-        const ConnectivityIndicator(),
+        IconButton(
+          icon: Icon(showListView ? Icons.analytics : Icons.list),
+          onPressed: () {
+            setState(() {
+              showListView = !showListView;
+            });
+          },
+          tooltip: showListView ? 'Chart View' : 'List View',
+        ),
         if (AppConfig.enableDebugFeatures) ...[
+          const ConnectivityIndicator(),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showEnvironmentInfo(context),
@@ -86,8 +101,8 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
       child: Column(
         children: [
           _buildSymbolSelector(symbolsAsync),
-          const SizedBox(height: 16),
-          _buildConnectionStatus(context, connectionState),
+          // const SizedBox(height: 16),
+          // _buildConnectionStatus(context, connectionState),
           const SizedBox(height: 16),
           _buildStockInfoCard(),
           const SizedBox(height: 16),
@@ -103,8 +118,8 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
       child: Column(
         children: [
           _buildSymbolSelector(symbolsAsync),
-          const SizedBox(height: 24),
-          _buildConnectionStatus(context, connectionState),
+          // const SizedBox(height: 24),
+          // _buildConnectionStatus(context, connectionState),
           const SizedBox(height: 24),
           // Two-column layout for tablet
           Row(
@@ -134,8 +149,8 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
         Row(
           children: [
             Expanded(child: _buildSymbolSelector(symbolsAsync)),
-            const SizedBox(width: 24),
-            _buildConnectionStatus(context, connectionState),
+            // const SizedBox(width: 24),
+            // _buildConnectionStatus(context, connectionState),
           ],
         ),
         const SizedBox(height: 32),
@@ -280,7 +295,7 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
             const SizedBox(height: 16),
             SizedBox(
               height: ResponsiveUtils.isMobile(context) ? 300 : 400,
-              child: StockChartWidget(symbol: selectedSymbol),
+              child: EnhancedChartComponent(symbol: selectedSymbol),
             ),
           ],
         ),
@@ -343,5 +358,126 @@ class _ResponsiveStockDashboardState extends ConsumerState<ResponsiveStockDashbo
       case WebSocketConnectionState.disconnected:
         return 'Disconnected';
     }
+  }
+
+  Widget _buildStockListView(BuildContext context, AsyncValue<List<String>> symbolsAsync) {
+    return symbolsAsync.when(
+      data: (symbols) => Column(
+        children: [
+          // Header with count
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade50,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${symbols.length} Stocks Available',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+          // Stocks list
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(availableSymbolsProvider);
+                await ref.read(availableSymbolsProvider.future);
+              },
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: symbols.length,
+                  itemBuilder: (context, index) {
+                    final symbol = symbols[index];
+                    return EnhancedStockTile(
+                      symbol: symbol,
+                      onTap: () => _navigateToStockDetail(context, symbol),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading stocks...'),
+            ],
+          ),
+        ),
+      ),
+      error: (error, stackTrace) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red.shade300,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load stocks',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.red.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ref.invalidate(availableSymbolsProvider);
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToStockDetail(BuildContext context, String symbol) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StockDetailScreen(symbol: symbol),
+      ),
+    );
   }
 }

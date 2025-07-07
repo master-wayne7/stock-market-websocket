@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../providers/daily_ohlc_provider.dart';
 import 'symbol_image.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class EnhancedStockTile extends ConsumerWidget {
   final String symbol;
@@ -89,7 +90,7 @@ class EnhancedStockTile extends ConsumerWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 12,
-                        color: dailyOHLC.isPositive ? Colors.green : Colors.red,
+                        color: dailyOHLC.isPositive ? AppColors.chartPositive : AppColors.chartNegative,
                       ),
                     ),
                   ] else ...[
@@ -121,7 +122,7 @@ class EnhancedStockTile extends ConsumerWidget {
       FlSpot(4, dailyOHLC.isPositive ? 0.9 : 0.2),
     ];
 
-    final lineColor = dailyOHLC.isPositive ? Colors.green : Colors.red;
+    final lineColor = dailyOHLC.isPositive ? AppColors.chartPositive : AppColors.chartNegative;
 
     return LineChart(
       LineChartData(

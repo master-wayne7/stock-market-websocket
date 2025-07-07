@@ -4,6 +4,7 @@ import 'syncfusion_candle_chart.dart';
 import 'line_chart_widget.dart';
 import '../../providers/time_period_provider.dart';
 import '../../providers/period_trend_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class EnhancedChartComponent extends ConsumerWidget {
   final String symbol;
@@ -31,10 +32,10 @@ class EnhancedChartComponent extends ConsumerWidget {
             children: [
               Text(
                 selectedTimePeriod.label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
                 ),
               ),
               Text(
@@ -61,7 +62,7 @@ class EnhancedChartComponent extends ConsumerWidget {
 
         // Time Interval Chips and Chart Type Toggle
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(bottom: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -84,16 +85,16 @@ class EnhancedChartComponent extends ConsumerWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Theme.of(context).primaryColor,
+                      color: AppColors.getSelectionColor(context),
                       width: 1.5,
                     ),
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.white,
                   ),
                   child: Center(
                     child: Icon(
                       isCandlestickChart ? Icons.candlestick_chart : Icons.show_chart,
                       size: 18,
-                      color: Theme.of(context).primaryColor,
+                      color: AppColors.getSelectionColor(context),
                     ),
                   ),
                 ),
@@ -135,10 +136,10 @@ class EnhancedChartComponent extends ConsumerWidget {
           border: isSelected
               ? null
               : Border.all(
-                  color: Theme.of(context).primaryColor,
+                  color: AppColors.getSelectionColor(context),
                   width: 1.5,
                 ),
-          color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+          color: isSelected ? AppColors.getSelectionColor(context) : (Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.white),
         ),
         child: Center(
           child: Text(
@@ -146,7 +147,7 @@ class EnhancedChartComponent extends ConsumerWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Theme.of(context).primaryColor,
+              color: isSelected ? AppColors.textOnSelection : AppColors.getSelectionColor(context),
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../providers/stock_providers.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class StockChartWidget extends ConsumerStatefulWidget {
   final String symbol;
@@ -194,7 +195,12 @@ class _StockChartWidgetState extends ConsumerState<StockChartWidget> {
   Widget _buildCandlestickChart(List<CandleModel> candles) {
     // Simple candlestick visualization using custom paint
     return CustomPaint(
-      painter: CandlestickPainter(candles, Theme.of(context)),
+      painter: CandlestickPainter(
+        candles,
+        Theme.of(context),
+        AppColors.getBullishColor(context),
+        AppColors.getBearishColor(context),
+      ),
       child: Container(),
     );
   }
@@ -203,8 +209,10 @@ class _StockChartWidgetState extends ConsumerState<StockChartWidget> {
 class CandlestickPainter extends CustomPainter {
   final List<CandleModel> candles;
   final ThemeData theme;
+  final Color bullishColor;
+  final Color bearishColor;
 
-  CandlestickPainter(this.candles, this.theme);
+  CandlestickPainter(this.candles, this.theme, this.bullishColor, this.bearishColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -247,7 +255,7 @@ class CandlestickPainter extends CustomPainter {
 
       // Determine candle color
       final isGreen = candle.close > candle.open;
-      final candleColor = isGreen ? Colors.green : Colors.red;
+      final candleColor = isGreen ? bullishColor : bearishColor;
 
       // Draw high-low line
       canvas.drawLine(
@@ -267,7 +275,7 @@ class CandlestickPainter extends CustomPainter {
       canvas.drawRect(
         bodyRect,
         Paint()
-          ..color = isGreen ? Colors.green.withOpacity(0.8) : Colors.red.withOpacity(0.8)
+          ..color = candleColor.withOpacity(0.8)
           ..style = PaintingStyle.fill,
       );
 

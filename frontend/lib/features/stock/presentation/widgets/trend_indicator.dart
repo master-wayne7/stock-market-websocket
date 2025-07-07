@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/candle_analysis_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class TrendIndicator extends ConsumerWidget {
   final String? symbol;
@@ -112,13 +113,22 @@ class ChartTypeToggle extends ConsumerWidget {
     required IconData icon,
     required bool isSelected,
   }) {
+    final selectionColor = AppColors.getSelectionColor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () => ref.read(chartTypeProvider.notifier).state = type,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+          color: isSelected ? selectionColor : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
+          border: isSelected
+              ? null
+              : Border.all(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                  width: 1,
+                ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -126,13 +136,13 @@ class ChartTypeToggle extends ConsumerWidget {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : Colors.grey.shade600,
+              color: isSelected ? AppColors.textOnSelection : (isDark ? Colors.grey.shade300 : AppColors.textSecondary),
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey.shade600,
+                color: isSelected ? AppColors.textOnSelection : (isDark ? Colors.grey.shade300 : AppColors.textSecondary),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 12,
               ),

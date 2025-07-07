@@ -24,6 +24,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- PWA Configuration -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Stock Tracker">
@@ -141,12 +142,10 @@
   </div>
 
   <script>
-    // Service Worker registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('flutter-first-frame', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js');
-      });
-    }
+    // Mark as ready when Flutter loads
+    window.addEventListener('flutter-first-frame', function() {
+      document.body.classList.add('flutter-ready');
+    });
 
     // Error handling
     window.addEventListener('error', function(e) {
@@ -173,19 +172,48 @@
       `;
     });
 
-    // Mark as ready when Flutter loads
-    window.addEventListener('flutter-first-frame', function() {
-      document.body.classList.add('flutter-ready');
-    });
-
-    // Fallback timeout
+    // Fallback timeout - check if app is still loading
     setTimeout(function() {
       if (!document.body.classList.contains('flutter-ready')) {
         console.warn('Flutter app taking longer than expected to load');
+        const subtext = document.querySelector('.loading-subtext');
+        if (subtext) {
+          subtext.textContent = 'Still loading... This may take a moment on first visit.';
+        }
       }
     }, 10000);
+
+    // Extended timeout for complete failure
+    setTimeout(function() {
+      if (!document.body.classList.contains('flutter-ready')) {
+        document.body.innerHTML = `
+          <div class="error-container">
+            <div class="error-icon">⏱️</div>
+            <div class="error-title">Loading Taking Too Long</div>
+            <div class="error-message">
+              The app is taking longer than expected to load. This might be due to:
+              <ul style="text-align: left; margin: 1rem 0;">
+                <li>Slow network connection</li>
+                <li>Large initial download</li>
+                <li>Server issues</li>
+              </ul>
+              <button onclick="window.location.reload()" style="
+                background: #2196f3;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-top: 10px;
+              ">Try Again</button>
+            </div>
+          </div>
+        `;
+      }
+    }, 30000);
   </script>
 
-  <script src="flutter.js" defer></script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

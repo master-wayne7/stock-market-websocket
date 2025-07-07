@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'filtered_candle_provider.dart';
 import 'time_period_provider.dart';
+import '../../../core/constants/app_constants.dart';
 
 // Model for period-based trend information
 class PeriodTrend {
@@ -27,7 +28,7 @@ class PeriodTrend {
     changePercentage: 0.0,
     startPrice: 0.0,
     endPrice: 0.0,
-    trendColor: Colors.grey,
+    trendColor: AppColors.chartNeutral,
   );
 }
 
@@ -56,7 +57,7 @@ final periodTrendProvider = Provider.family<PeriodTrend, String>((ref, symbol) {
       changePercentage: 100.0, // 100% gain from zero
       startPrice: 0.0,
       endPrice: price,
-      trendColor: Colors.green,
+      trendColor: AppColors.chartPositive,
     );
   }
 
@@ -73,7 +74,7 @@ final periodTrendProvider = Provider.family<PeriodTrend, String>((ref, symbol) {
     changePercentage: changePercentage,
     startPrice: startPrice,
     endPrice: endPrice,
-    trendColor: isPositive ? Colors.green : Colors.red,
+    trendColor: isPositive ? AppColors.chartPositive : AppColors.chartNegative,
   );
 });
 

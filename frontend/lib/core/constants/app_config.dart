@@ -5,7 +5,7 @@ enum Environment {
 
 class AppConfig {
   // Current environment - automatically determined based on build mode
-  static const Environment environment = bool.fromEnvironment('dart.vm.product') ? Environment.production : Environment.development;
+  static const Environment environment = bool.fromEnvironment('dart.vm.product') ? Environment.production : Environment.production;
 
   // Base URLs for different environments
   static const Map<Environment, String> _baseUrls = {

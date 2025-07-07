@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/daily_ohlc_provider.dart';
 import '../../providers/stock_providers.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class RealtimePriceDisplay extends ConsumerWidget {
   final String symbol;
@@ -16,10 +17,10 @@ class RealtimePriceDisplay extends ConsumerWidget {
     final dailyOHLC = ref.watch(dailyOHLCProvider(symbol));
 
     if (dailyOHLC == null) {
-      return _buildLoadingState();
+      return _buildLoadingState(context);
     }
 
-    final changeColor = dailyOHLC.isPositive ? Colors.green : (dailyOHLC.priceChange == 0 ? Colors.grey : Colors.red);
+    final changeColor = dailyOHLC.isPositive ? AppColors.getBullishColor(context) : (dailyOHLC.priceChange == 0 ? AppColors.chartNeutral : AppColors.getBearishColor(context));
 
     return Card(
       child: Padding(
@@ -65,7 +66,7 @@ class RealtimePriceDisplay extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // OHLC Data
-            _buildOHLCGrid(dailyOHLC),
+            _buildOHLCGrid(context, dailyOHLC),
 
             const SizedBox(height: 16),
 
@@ -77,14 +78,14 @@ class RealtimePriceDisplay extends ConsumerWidget {
                   'Last updated: ${_formatTime(dailyOHLC.lastUpdated)}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
                   ),
                 ),
                 Text(
                   'Real-time data',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -95,7 +96,7 @@ class RealtimePriceDisplay extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -105,7 +106,9 @@ class RealtimePriceDisplay extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               'Loading real-time data...',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -142,33 +145,33 @@ class RealtimePriceDisplay extends ConsumerWidget {
     );
   }
 
-  Widget _buildOHLCGrid(DailyOHLC dailyOHLC) {
+  Widget _buildOHLCGrid(BuildContext context, DailyOHLC dailyOHLC) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildOHLCItem('Open', dailyOHLC.open, Colors.blue),
-          _buildOHLCItem('High', dailyOHLC.high, Colors.green),
-          _buildOHLCItem('Low', dailyOHLC.low, Colors.red),
-          _buildOHLCItem('Close', dailyOHLC.close, Colors.purple),
+          _buildOHLCItem(context, 'Open', dailyOHLC.open, AppColors.info),
+          _buildOHLCItem(context, 'High', dailyOHLC.high, AppColors.chartPositive),
+          _buildOHLCItem(context, 'Low', dailyOHLC.low, AppColors.chartNegative),
+          _buildOHLCItem(context, 'Close', dailyOHLC.close, Colors.purple),
         ],
       ),
     );
   }
 
-  Widget _buildOHLCItem(String label, double value, Color color) {
+  Widget _buildOHLCItem(BuildContext context, String label, double value, Color color) {
     return Column(
       children: [
         Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey.shade600,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),

@@ -42,10 +42,10 @@ class SymbolSelector extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.transparent,
+                        color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Colors.transparent,
                         border: Border.all(
-                          color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
-                          width: isSelected ? 2 : 1,
+                          color: isSelected ? Colors.blue : Theme.of(context).dividerColor,
+                          width: 1,
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -60,7 +60,7 @@ class SymbolSelector extends ConsumerWidget {
                           Text(
                             symbol,
                             style: TextStyle(
-                              color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).textTheme.bodyMedium?.color,
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import '../../../core/models/candle_model.dart';
+import '../../../core/constants/app_constants.dart';
 
 // Trend direction enum
 enum TrendDirection {
@@ -12,9 +13,9 @@ enum TrendDirection {
 // Trend colors configuration
 class TrendingColors {
   static const Map<TrendDirection, Color> colors = {
-    TrendDirection.up: Colors.green,
-    TrendDirection.down: Colors.red,
-    TrendDirection.flat: Colors.black,
+    TrendDirection.up: AppColors.chartPositive,
+    TrendDirection.down: AppColors.chartNegative,
+    TrendDirection.flat: AppColors.chartNeutral,
   };
 }
 

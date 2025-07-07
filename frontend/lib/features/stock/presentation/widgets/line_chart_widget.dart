@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../providers/filtered_candle_provider.dart';
 import '../../providers/period_trend_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class LineChartWidget extends ConsumerWidget {
   final String symbol;
@@ -101,7 +102,7 @@ class LineChartWidget extends ConsumerWidget {
           lineTouchData: LineTouchData(
             enabled: true,
             touchTooltipData: LineTouchTooltipData(
-              getTooltipColor: (touchedSpot) => Colors.black87,
+              getTooltipColor: (touchedSpot) => Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.black87,
               tooltipRoundedRadius: 8,
               getTooltipItems: (touchedSpots) {
                 return touchedSpots.map((LineBarSpot touchedSpot) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../providers/five_minute_candles_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../providers/filtered_candle_provider.dart';
 import '../../providers/stock_providers.dart';
 
@@ -92,7 +93,6 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
           Expanded(
             child: SfCartesianChart(
               plotAreaBorderWidth: 0,
-              backgroundColor: Colors.white,
               primaryXAxis: const DateTimeAxis(
                 isVisible: false,
                 majorGridLines: MajorGridLines(width: 0),
@@ -111,8 +111,8 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
                   dataSource: candlesData,
                   animationDuration: 400,
                   enableSolidCandles: true,
-                  bullColor: Colors.green,
-                  bearColor: Colors.red,
+                  bullColor: AppColors.getBullishColor(context),
+                  bearColor: AppColors.getBearishColor(context),
                   xValueMapper: (ChartCandleData candle, _) => candle.time,
                   lowValueMapper: (ChartCandleData candle, _) => candle.low,
                   highValueMapper: (ChartCandleData candle, _) => candle.high,
@@ -238,7 +238,7 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
     final priceChange = latest != null && previous != null ? latest.close - previous.close : 0.0;
     final percentChange = previous != null && previous.close != 0 ? (priceChange / previous.close) * 100 : 0.0;
 
-    final changeColor = priceChange > 0 ? Colors.green : (priceChange < 0 ? Colors.red : Colors.grey);
+    final changeColor = priceChange > 0 ? AppColors.getBullishColor(context) : (priceChange < 0 ? AppColors.getBearishColor(context) : AppColors.chartNeutral);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
