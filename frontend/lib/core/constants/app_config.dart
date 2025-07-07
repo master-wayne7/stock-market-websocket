@@ -4,8 +4,8 @@ enum Environment {
 }
 
 class AppConfig {
-  // Current environment - change this for different builds
-  static const Environment environment = Environment.development;
+  // Current environment - automatically determined based on build mode
+  static const Environment environment = bool.fromEnvironment('dart.vm.product') ? Environment.production : Environment.development;
 
   // Base URLs for different environments
   static const Map<Environment, String> _baseUrls = {
@@ -23,6 +23,12 @@ class AppConfig {
   static const String localhostBaseUrl = 'http://localhost:8080';
   static const String localhostWsUrl = 'ws://localhost:8080/ws';
 
+  // Debug configuration
+  static bool get enableDebugFeatures => isDevelopment;
+  static bool get showDebugBanner => isDevelopment;
+  static bool get enableLogging => isDevelopment;
+  static bool get enablePerformanceOverlay => isDevelopment && bool.fromEnvironment('ENABLE_PERFORMANCE_OVERLAY');
+
   // Getters for current environment
   static String get baseUrl => _baseUrls[environment] ?? _baseUrls[Environment.development]!;
   static String get wsUrl => _wsUrls[environment] ?? _wsUrls[Environment.development]!;
@@ -37,7 +43,9 @@ class AppConfig {
     return 'Environment: $environmentName\n'
         'Base URL: $baseUrl\n'
         'WebSocket URL: $wsUrl\n'
-        'Is Production: $isProduction';
+        'Is Production: $isProduction\n'
+        'Debug Features: $enableDebugFeatures\n'
+        'Logging: $enableLogging';
   }
 
   // For different device types

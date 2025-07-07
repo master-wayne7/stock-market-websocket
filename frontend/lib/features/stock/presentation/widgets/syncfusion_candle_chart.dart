@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -50,22 +51,24 @@ class _SyncfusionCandleChartState extends ConsumerState<SyncfusionCandleChart> {
     final historicalData = ref.watch(symbolHistoricalDataProvider(widget.symbol));
     final webSocketState = ref.watch(symbolWebSocketProvider(widget.symbol));
 
-    // Debug logging
-    print('📊 Chart Debug for ${widget.symbol}:');
-    print('  - 5min candles: ${candlesData.length}');
-    print('  - Combined data: ${combinedData.length}');
-    print('  - Historical data: ${historicalData.length}');
-    print('  - Live candles: ${webSocketState.liveCandles.length}');
-    print('  - WebSocket connected: ${webSocketState.isConnected}');
+    // Debug logging (development only)
+    if (kDebugMode) {
+      print('📊 Chart Debug for ${widget.symbol}:');
+      print('  - 5min candles: ${candlesData.length}');
+      print('  - Combined data: ${combinedData.length}');
+      print('  - Historical data: ${historicalData.length}');
+      print('  - Live candles: ${webSocketState.liveCandles.length}');
+      print('  - WebSocket connected: ${webSocketState.isConnected}');
 
-    if (historicalData.isNotEmpty) {
-      print('  - First historical: ${historicalData.first.timestamp} - \$${historicalData.first.close}');
-      print('  - Last historical: ${historicalData.last.timestamp} - \$${historicalData.last.close}');
-    }
+      if (historicalData.isNotEmpty) {
+        print('  - First historical: ${historicalData.first.timestamp} - \$${historicalData.first.close}');
+        print('  - Last historical: ${historicalData.last.timestamp} - \$${historicalData.last.close}');
+      }
 
-    if (combinedData.isNotEmpty) {
-      print('  - First combined: ${combinedData.first.timestamp} - \$${combinedData.first.close}');
-      print('  - Last combined: ${combinedData.last.timestamp} - \$${combinedData.last.close}');
+      if (combinedData.isNotEmpty) {
+        print('  - First combined: ${combinedData.first.timestamp} - \$${combinedData.first.close}');
+        print('  - Last combined: ${combinedData.last.timestamp} - \$${combinedData.last.close}');
+      }
     }
 
     // Show different states based on data availability

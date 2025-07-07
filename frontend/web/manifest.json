@@ -1,13 +1,20 @@
 {
-    "name": "frontend",
-    "short_name": "frontend",
+    "name": "Stock Market WebSocket Tracker",
+    "short_name": "Stock Tracker",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#f5f5f5",
+    "theme_color": "#2196F3",
+    "description": "Real-time stock market data visualization with interactive charts and live WebSocket updates",
+    "orientation": "any",
     "prefer_related_applications": false,
+    "categories": [
+        "finance",
+        "business",
+        "productivity"
+    ],
+    "lang": "en-US",
+    "scope": "./",
     "icons": [
         {
             "src": "icons/Icon-192.png",
@@ -30,6 +37,14 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide"
         }
     ]
 }

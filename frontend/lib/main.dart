@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/di/injection.dart';
+import 'core/constants/app_config.dart';
 
-import 'features/stock/presentation/screens/symbols_list_screen.dart';
+import 'features/stock/presentation/screens/responsive_stock_dashboard.dart';
 import 'core/constants/app_constants.dart';
 
 void main() {
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: AppConfig.showDebugBanner,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: const SymbolsListScreen(),
+      home: const ResponsiveStockDashboard(),
     );
   }
 }
