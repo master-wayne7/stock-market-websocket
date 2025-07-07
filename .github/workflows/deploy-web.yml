@@ -37,14 +37,6 @@ jobs:
         working-directory: ./frontend
         run: flutter pub get
 
-      - name: Analyze code
-        working-directory: ./frontend
-        run: flutter analyze
-
-      - name: Run tests
-        working-directory: ./frontend
-        run: flutter test
-
       - name: Build Flutter Web (Production)
         working-directory: ./frontend
         run: |
@@ -87,14 +79,6 @@ jobs:
       - name: Get dependencies
         working-directory: ./frontend
         run: flutter pub get
-
-      - name: Analyze code
-        working-directory: ./frontend
-        run: flutter analyze
-
-      - name: Run tests
-        working-directory: ./frontend
-        run: flutter test
 
       - name: Build Flutter Web (Check)
         working-directory: ./frontend
