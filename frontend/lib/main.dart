@@ -4,7 +4,6 @@ import 'package:frontend/features/stock/presentation/screens/responsive_stock_da
 import 'core/di/injection.dart';
 import 'core/constants/app_config.dart';
 
-import 'features/stock/presentation/screens/simple_dashboard.dart';
 import 'core/constants/app_constants.dart';
 
 void main() {

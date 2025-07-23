@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o stock-market-websocket ./cmd
 
 # Production stage
 FROM alpine:latest
@@ -32,10 +32,10 @@ RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
 WORKDIR /root/
 
 # Copy binary from builder
-COPY --from=builder /app/main .
+COPY --from=builder /app/stock-market-websocket .
 
 # Change ownership to non-root user
-RUN chown appuser:appuser main
+RUN chown appuser:appuser stock-market-websocket
 
 # Switch to non-root user
 USER appuser
@@ -44,4 +44,4 @@ USER appuser
 EXPOSE 8080
 
 # Run the application
-CMD ["./main"] 
+CMD ["./stock-market-websocket"] 
